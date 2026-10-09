@@ -29,4 +29,4 @@ Thumbs.db
 # Logs y temporales
 *.log
 *.tmp
-.cache/
+.cache/-e "venv/\n.env\nmodel_cache/\nvectorstore/\n__pycache__/" 
