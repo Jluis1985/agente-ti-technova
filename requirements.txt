@@ -7,4 +7,10 @@ python-dotenv
 python-docx
 pypdf
 tiktoken
+langchain
+langchain-core
+langchain-community
 langchain-groq
+langchain-chroma
+chromadb
+python-docx
