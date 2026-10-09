@@ -4,21 +4,19 @@ from dotenv import load_dotenv
 
 from langchain_community.document_loaders import DirectoryLoader, Docx2txtLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
 
-# Cargar variables de entorno
 load_dotenv()
 
-# Rutas
 DATA_PATH = Path("data")
 VECTORSTORE_PATH = "vectorstore"
+MODEL_PATH = "./model_cache"
 
 def load_documents():
-    """Carga todos los documentos de la carpeta data/ (incluyendo subcarpetas)"""
+    """Carga todos los documentos de la carpeta data/."""
     documents = []
 
-    # Cargar archivos .docx
     docx_loader = DirectoryLoader(
         path=str(DATA_PATH),
         glob="**/*.docx",
@@ -27,7 +25,6 @@ def load_documents():
     )
     documents.extend(docx_loader.load())
 
-    # Cargar archivos .md y .txt (por si tienes algunos)
     for ext in ["**/*.md", "**/*.txt"]:
         try:
             text_loader = DirectoryLoader(
@@ -44,7 +41,7 @@ def load_documents():
     return documents
 
 def split_documents(documents):
-    """Divide los documentos en fragmentos más pequeños"""
+    """Divide los documentos en fragmentos (chunks)."""
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
         chunk_overlap=150,
@@ -56,12 +53,13 @@ def split_documents(documents):
     return chunks
 
 def create_vectorstore(chunks):
-    """Crea la base vectorial con Chroma + embeddings locales"""
-    print("\n🔄 Generando embeddings (esto puede tardar un poco la primera vez)...")
+    """Crea la base vectorial con Chroma leyendo el modelo local."""
+    print("\n🔄 Generando embeddings...")
 
-    # Usamos un modelo de embeddings gratuito y local
     embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
+        model_name=MODEL_PATH,
+        model_kwargs={"device": "cpu"},
+        encode_kwargs={"normalize_embeddings": True}
     )
 
     vectorstore = Chroma.from_documents(
@@ -76,16 +74,12 @@ def create_vectorstore(chunks):
 def main():
     print("=== Iniciando ingestión de documentos ===\n")
 
-    # 1. Cargar documentos
     documents = load_documents()
     if not documents:
         print("❌ No se encontraron documentos en la carpeta data/")
         return
 
-    # 2. Dividir en chunks
     chunks = split_documents(documents)
-
-    # 3. Crear base vectorial
     create_vectorstore(chunks)
 
     print("\n🎉 ¡Ingestión completada con éxito!")
