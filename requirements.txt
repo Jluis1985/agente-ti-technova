@@ -14,3 +14,4 @@ langchain-groq
 langchain-chroma
 chromadb
 python-docx
+fastembed

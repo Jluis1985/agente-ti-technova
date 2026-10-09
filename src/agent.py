@@ -78,7 +78,10 @@ def procesar_solicitud(pregunta_usuario: str, auto_confirm: bool = False) -> str
         logger.info("🛠️ [TOOL INTENT] Solicitud requiere ejecución de herramienta 'crear_ticket'.")
         logger.warning("⚠️ [HITL TRIGGER] Interrupción generada. Se requiere Aprobación Humana (HITL).")
         
-        if not auto_confirm:
+# Detección de auto-confirmación o entorno CI (GitHub Actions)
+        modo_ci = os.getenv("CI") == "true" or os.getenv("AUTO_APPROVE") == "true"
+
+        if not auto_confirm and not modo_ci:
             print(f"\n==================================================")
             print(f"⚠️  PUNTO DE APROBACIÓN HUMANA REQUERIDO ⚠️")
             print(f"Solicitud de ticket detectada.")
@@ -90,8 +93,8 @@ def procesar_solicitud(pregunta_usuario: str, auto_confirm: bool = False) -> str
                 return "⛔ Solicitud de ticket cancelada: La acción no fue autorizada por el supervisor/operador de TI."
             logger.info("✅ [HITL APPROVED] Operación autorizada por el usuario/supervisor.")
         else:
-            logger.info("👤 [HITL EVALUATION] Aprobación simulada por entorno de pruebas (auto_confirm=True).")
-
+            logger.info("👤 [HITL EVALUATION] Aprobación simulada por entorno de pruebas / CI.")
+            
         # Invocación directa y limpia de la herramienta usando el esquema Pydantic
         try:
             logger.info("🛠️ [TOOL EXECUTION] Ejecutando herramienta 'crear_ticket_soporte' con esquema Pydantic...")
