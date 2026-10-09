@@ -1,0 +1,9 @@
+anthropic
+langchain
+langchain-anthropic
+langchain-community
+chromadb
+python-dotenv
+python-docx
+pypdf
+tiktoken

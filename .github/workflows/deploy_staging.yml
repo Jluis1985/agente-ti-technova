@@ -1,0 +1,56 @@
+name: CI/CD Staging Deployment Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  quality_gate_and_test:
+    name: Run Quality Gate & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar Suite de Evaluación y Quality Gate
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python evals/run_eval.py
+
+  deploy_staging:
+    name: Deploy to Staging Environment
+    needs: quality_gate_and_test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Construir imagen Docker de prueba
+        run: |
+          docker build -t technova-agent:staging .
+
+      - name: Simulación / Despliegue en Ambiente de Staging
+        run: |
+          echo "🚀 Desplegando TechNova Agent en servidor de Staging..."
+          # Ejemplo de despliegue en contenedor de prueba
+          docker run -d --name technova_staging_app \
+            -e GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
+            technova-agent:staging
+          
+          echo "✅ Despliegue en ambiente de prueba completado exitosamente."
